@@ -100,6 +100,14 @@ def load_testset(env_name, dataset, id):
             path = {"env": "antmaze-large-biased-v2"}
         elif dataset == "large_noisy":
             path = {"env": "antmaze-large-noisy-v2"}
+        elif dataset == 'medium_play':
+            path = {"env": "antmaze-medium-play-v2"}
+        elif dataset == 'medium_diverse':
+            path = {"env": "antmaze-medium-diverse-v2"}
+        elif dataset == 'large_play':
+            path = {"env": "antmaze-large-play-v2"}
+        elif dataset == 'large_diverse':
+            path = {"env": "antmaze-large-diverse-v2"}
         else:
             raise ValueError("Invalid dataset: {}".format(dataset))
     else:

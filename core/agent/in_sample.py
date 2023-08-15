@@ -36,6 +36,7 @@ class InSampleAC(base.Agent):
         target_network_update_freq,
         evaluation_criteria,
         logger,
+        wandb_project="inac_baseline",
     ):
         super(InSampleAC, self).__init__(
             exp_path=exp_path,
@@ -134,7 +135,7 @@ class InSampleAC(base.Agent):
             env_name + "_" + dataset + "_" + f"tau{tau:.2f}_seed{seed}"
         )
         wandb.init(
-            project="inac_baseline",
+            project=wandb_project,
             config=config,
             name=full_name,
             dir=exp_path,
@@ -183,7 +184,7 @@ class InSampleAC(base.Agent):
         critic2_loss = (0.5 * (q_target - q2) ** 2).mean()
         loss_q = (critic1_loss + critic2_loss) * 0.5
         q_info = minq.detach().numpy()
-        return loss_q, q_info
+        return loss_q, q_info, q1.detach().numpy(), q2.detach().numpy()
 
     def compute_loss_pi(self, data):
         """L_{\psi}, extract learned policy"""
@@ -211,6 +212,16 @@ class InSampleAC(base.Agent):
         return loss_beh_pi
 
     def update(self, data):
+        reward_shape = True
+        if reward_shape:
+            data['reward'] = data['reward'] - 1 # make -1, 0
+            if isinstance(data['done'], torch.Tensor):
+                data['done'] = torch.zeros_like(data['done'])
+            elif isinstance(data['done'], np.ndarray):
+                data['done'] = np.zeros_like(data['done'])
+            else:
+                raise ValueError('Unknown type of done {}'.format(type(data['done'])))
+
         loss_beta = self.update_beta(data).item()
 
         self.value_optimizer.zero_grad()
@@ -218,7 +229,7 @@ class InSampleAC(base.Agent):
         loss_vs.backward()
         self.value_optimizer.step()
 
-        loss_q, qinfo = self.compute_loss_q(data)
+        loss_q, qinfo, q1, q2 = self.compute_loss_q(data)
         self.q_optimizer.zero_grad()
         loss_q.backward()
         self.q_optimizer.step()
@@ -235,12 +246,26 @@ class InSampleAC(base.Agent):
             self.sync_target()
 
         return {
-            "beta": loss_beta,
-            "actor": loss_pi.item(),
-            "critic": loss_q.item(),
-            "value": loss_vs.item(),
-            "q_info": qinfo.mean(),
-            "v_info": v_info.mean(),
+            "beta_loss": loss_beta,
+            "actor_loss": loss_pi.item(),
+            "critic_loss": loss_q.item(),
+            "value_loss": loss_vs.item(),
+            'v_mean': v_info.mean(),
+            'v_std': v_info.std(),
+            'v_max': v_info.max(),
+            'v_min': v_info.min(),
+            'minq_mean': qinfo.mean(),
+            'minq_std': qinfo.std(),
+            'minq_max': qinfo.max(),
+            'minq_min': qinfo.min(),
+            'q1_mean': q1.mean(),
+            'q1_std': q1.std(),
+            'q1_max': q1.max(),
+            'q1_min': q1.min(),
+            'q2_mean': q2.mean(),
+            'q2_std': q2.std(),
+            'q2_max': q2.max(),
+            'q2_min': q2.min(),
             "logp_info": logp_info.mean(),
         }
 

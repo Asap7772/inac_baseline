@@ -29,6 +29,7 @@ if __name__ == '__main__':
     parser.add_argument('--evaluation_criteria', default='return', type=str)
     parser.add_argument('--device', default='cpu', type=str)
     parser.add_argument('--info', default='0', type=str)
+    parser.add_argument('--wandb_project', default='inac_baseline', type=str)
     cfg = parser.parse_args()
 
     torch_utils.set_one_thread()
@@ -66,6 +67,7 @@ if __name__ == '__main__':
         use_target_network=cfg.use_target_network,
         target_network_update_freq=cfg.target_network_update_freq,
         evaluation_criteria=cfg.evaluation_criteria,
-        logger=cfg.logger
+        logger=cfg.logger,
+        wandb_project=cfg.wandb_project,
     )
     run_funcs.run_steps(agent_obj, cfg.max_steps, cfg.log_interval, exp_path)

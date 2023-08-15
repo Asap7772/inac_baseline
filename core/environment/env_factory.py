@@ -38,6 +38,14 @@ class EnvFactory:
                 return lambda: gym.make("antmaze-large-biased-v2")
             elif dataset == 'large_noisy':
                 return lambda: gym.make("antmaze-large-noisy-v2")
+            elif dataset == 'medium_play':
+                return lambda: gym.make("antmaze-medium-play-v2")
+            elif dataset == 'medium_diverse':
+                return lambda: gym.make("antmaze-medium-diverse-v2")
+            elif dataset == 'large_play':
+                return lambda: gym.make("antmaze-large-play-v2")
+            elif dataset == 'large_diverse':
+                return lambda: gym.make("antmaze-large-diverse-v2")
         else:
             print(cfg.env_name)
             raise NotImplementedError
